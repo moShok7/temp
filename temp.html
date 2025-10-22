@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кроссворд</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+h1 { margin-bottom: 10px; }
+
+.crossword {
+  display: grid;
+  grid-template-columns: repeat(20, 35px);
+  grid-auto-rows: 35px;
+  gap: 2px;
+  background: #ccc;
+  padding: 5px;
+}
+
+.cell-wrapper { position: relative; }
+
+.cell {
+  width: 35px;
+  height: 35px;
+  background: white;
+  text-align: center;
+  font-size: 20px;
+  text-transform: uppercase;
+  border: 1px solid #999;
+}
+
+.cell:disabled { background: #444; border: 1px solid #444; }
+
+.number-btn {
+  position: absolute;
+  top: -12px;
+  left: 2px;
+  font-size: 17px;
+  font-weight: bold;
+  color: red;
+  cursor: pointer;
+}
+
+/* Модальное окно на весь экран */
+#modal {
+  display: none;
+  position: fixed;
+  top:0; left:0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.8);
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  flex-direction: column;
+}
+
+#modal-content {
+  background: #fff;
+  width: 90%;
+  height: 80%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  flex-direction: column;
+  padding: 20px;
+  border-radius: 10px;
+  overflow: auto;
+}
+
+#modal-content h1 {
+  font-size: 50px;
+  color: #e91e63;
+  margin-bottom: 20px;
+}
+
+#modal-content p {
+  font-size: 32px;
+  color: #000;
+}
+
+/* Кнопка закрытия */
+#modal button {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 24px;
+  background: red;
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+#questions-modal {
+  display: none;
+  position: fixed;
+  top:0; left:0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.8);
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  flex-direction: column;
+}
+
+#questions-modal-content {
+  background: #fff;
+  width: 90%;
+  height: 80%;
+  display: flex;
+  justify-content: start;
+  align-items: flex-start;
+  text-align: left;
+  flex-direction: column;
+  padding: 20px;
+  border-radius: 10px;
+  overflow: auto;
+}
+
+#questions-modal-content h2 {
+  color: #e91e63;
+}
+
+#questions-modal-content p {
+  font-size: 20px;
+  margin: 5px 0;
+}
+
+#questions-modal button {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 24px;
+  background: red;
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+</style>
+</head>
+<body>
+
+<h1>Кроссворд по обществознанию</h1>
+<div class="crossword" id="crossword"></div>
+
+<!-- Модальное окно -->
+<div id="modal">
+  <button onclick="closeModal()">✖</button>
+  <div id="modal-content"></div>
+</div>
+
+
+<button id="show-questions-btn" style="margin: 20px; padding:10px 15px; font-size:18px; cursor:pointer;">Показать все вопросы</button>
+
+<!-- Модальное окно для всех вопросов -->
+<div id="questions-modal">
+  <button onclick="closeQuestionsModal()">✖</button>
+  <div id="questions-modal-content"></div>
+</div>
+
+<script>
+const grid = [
+  "___СОЦИАЛИЗАЦИЯ__Г__",
+  "___Е_____Н_______Р__",
+  "___М_____Д___Л___У__",
+  "КУЛЬТУРА_И_Э_И___П__",
+  "___Я_____В_Т_Ч___П__",
+  "_________И_И_НОРМА__",
+  "_________Д_К_О______",
+  "______ГОСУДАРСТВО___",
+  "_________А___Т_____",
+  "_______РОЛЬ__Ь______",
+  "____З____Ь__________",
+  "____А__ЦЕННОСТЬ_____",
+  "____К____О_Б_Р______",
+  "____О____С_Щ_У______",
+  "__КОНФЛИКТ_Е_Д______",
+  "_________Ь_С________",
+  "___________Т________",
+  "_______МИРОВОЗЗРЕНИЕ",
+  "___________О________",
+];
+
+const words = [
+{number:1, row:0, col:3, question:"Как называется процесс усвоения индивидом социальных норм, ценностей и ролей в обществе?"},
+{number:2, row:3, col:0, question:"Что представляет собой совокупность материальных и духовных ценностей, созданных обществом?"},
+{number:3, row:0, col:17, question:"Как называется совокупность индивидов, объединённых совместной деятельностью, интересами или социальными связями?"},
+{number:4, row:0, col:9, question:"Как обозначают совокупность психологических и физических особенностей человека, отличающих его от других индивидов?"},
+{number:5, row:7, col:6, question:"Как называется организация политической власти, осуществляющая управление обществом и регулирующая общественные отношения?"},
+{number:6, row:3, col:11, question:"Наука о морали и нравственном поведении человека называется…?"},
+{number:7, row:2, col:13, question:"Челеовеческий индивид, являющийся субЪектом сознательной деятельности, обладающий совокупностью социально значмых черт, свойств качеств"},
+{number:8, row:5, col:13, question:"Как называется правило поведения, установленное обществом?"},
+{number:9, row:9, col:7, question:"Как называют поведение человека, ожидаемое обществом в определённой позиции?"},
+{number:10, row:11, col:7, question:"Что в обществознании понимается как социально значимое благо, целью действия или ориентира поведения индивида?"},
+{number:11, row:10, col:4, question:"Обязательное для всех правило, установленное государством."},
+{number:12, row:14, col:2, question:"Как называется столкновение интересов или взглядов между людьми или группами?"},
+{number:13, row:11, col:13, question:"Как в обществознании определяется целенаправленная деятельность человека, создающая материальные и духовные ценности?"},
+{number:14, row:11, col:11, question:"Что понимается как устойчивое объединение людей, обладающих общими потребностями, нормами, институтами и взаимодействием между ними?"},
+{number:15, row:17, col:7, question:"Что представляет собой систему взглядов, оценок и убеждений человека, определяющую его отношение к окружающему миру и месту в нём?"},
+];
+
+const crossword = document.getElementById("crossword");
+const modal = document.getElementById("modal");
+const modalContent = document.getElementById("modal-content");
+const rows = grid.length;
+const cols = 20;
+const inputs = [];
+
+grid.forEach((row, r) => {
+  for (let c = 0; c < cols; c++) {
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("cell-wrapper");
+
+    const input = document.createElement("input");
+    input.classList.add("cell");
+    input.maxLength = 1;
+    input.dataset.row = r;
+    input.dataset.col = c;
+
+    const char = row[c] || "_";
+    if (char === "_") input.disabled = true;
+    else {
+      input.dataset.correct = char.toUpperCase();
+      input.addEventListener("input", e => {
+        const val = e.target.value.toUpperCase();
+        e.target.value = val;
+        if (!val) e.target.style.background = "white";
+        else if (val === e.target.dataset.correct) e.target.style.background = "#b9f6ca";
+        else e.target.style.background = "#ff8a80";
+      });
+    }
+
+    words.forEach(w => {
+      if (r === w.row && c === w.col) {
+        const num = document.createElement("div");
+        num.textContent = w.number;
+        num.classList.add("number-btn");
+        num.addEventListener("click", () => {
+          modalContent.innerHTML = `<h1>Вопрос ${w.number}</h1><p>${w.question}</p>`;
+          modal.style.display = "flex";
+        });
+        wrapper.appendChild(num);
+      }
+    });
+
+    wrapper.appendChild(input);
+    crossword.appendChild(wrapper);
+
+    if (!inputs[r]) inputs[r] = [];
+    inputs[r][c] = input;
+  }
+});
+
+function closeModal() {
+  modal.style.display = "none";
+  modalContent.innerHTML = "";
+}
+
+const showQuestionsBtn = document.getElementById("show-questions-btn");
+const questionsModal = document.getElementById("questions-modal");
+const questionsModalContent = document.getElementById("questions-modal-content");
+
+showQuestionsBtn.addEventListener("click", () => {
+  questionsModalContent.innerHTML = "<h2>Все вопросы к кроссворду:</h2>";
+  words.forEach(w => {
+    questionsModalContent.innerHTML += `<p><strong>${w.number}:</strong> ${w.question}</p>`;
+  });
+  questionsModal.style.display = "flex";
+});
+
+function closeQuestionsModal() {
+  questionsModal.style.display = "none";
+  questionsModalContent.innerHTML = "";
+}
+</script>
+</body>
+</html>
